@@ -1,0 +1,55 @@
+﻿@* Views/Admin/Index.cshtml *@
+@model List<PollApp.Models.Poll>
+
+@{
+    ViewData["Title"] = "Admin Panel - Polls";
+}
+
+<h1>Admin Panel - Polls</h1>
+
+<a asp-action="Create" class="btn btn-primary mb-3">Create New Poll</a>
+<a asp-action="Users" class="btn btn-secondary mb-3">Manage Users</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var poll in Model)
+        {
+            <tr>
+                <td>@poll.Title</td>
+                <td>@poll.Description</td>
+                <td>@poll.StartDate.ToShortDateString()</td>
+                <td>@(poll.EndDate?.ToShortDateString() ?? "N/A")</td>
+                <td>@poll.IsActive</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@poll.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@poll.Id" method="post" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</button>
+                    </form>
+                    <a asp-controller="Poll" asp-action="Results" asp-route-id="@poll.Id" class="btn btn-info btn-sm">Results</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav aria-label="Pagination">
+    <ul class="pagination">
+        <li class="page-item @(ViewBag.Page > 1 ? "" : "disabled")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page - 1)">Previous</a>
+        </li>
+        <li class="page-item @(ViewBag.HasNext ? "" : "disabled")">
+            <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page + 1)">Next</a>
+        </li>
+    </ul>
+</nav>

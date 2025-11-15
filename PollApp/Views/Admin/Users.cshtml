@@ -1,0 +1,49 @@
+﻿@* Views/Admin/Users.cshtml *@
+@model List<PollApp.Models.AppUser>
+
+@{
+    ViewData["Title"] = "Manage Users";
+    var roles = ViewData["Roles"] as List<IdentityRole>;
+}
+
+<h1>Manage Users</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Roles</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            var userRoles = await UserManager.GetRolesAsync(user);
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>@string.Join(", ", userRoles)</td>
+                <td>
+                    <form asp-action="Block" method="post" style="display: inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Block this user?');">Block</button>
+                    </form>
+                    <form asp-action="AssignRole" method="post" style="display: inline;">
+                        <input type="hidden" name="userId" value="@user.Id" />
+                        <select name="role" class="form-select form-select-sm">
+                            @foreach (var role in roles ?? new List<IdentityRole>())
+                            {
+                                <option value="@role.Name">@role.Name</option>
+                            }
+                        </select>
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary btn-sm">Assign Role</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

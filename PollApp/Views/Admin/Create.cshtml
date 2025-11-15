@@ -1,0 +1,57 @@
+﻿@* Views/Admin/Create.cshtml *@
+@model PollApp.ViewModels.PollViewModel
+
+@{
+    ViewData["Title"] = "Create Poll";
+}
+
+<h1>Create New Poll</h1>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Title" class="control-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description" class="control-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Options</label>
+        <div id="optionsContainer">
+            <div class="input-group mb-2">
+                <input type="text" name="Options[0]" class="form-control" placeholder="Option 1" required />
+            </div>
+            <div class="input-group mb-2">
+                <input type="text" name="Options[1]" class="form-control" placeholder="Option 2" required />
+            </div>
+        </div>
+        <button type="button" class="btn btn-info" onclick="addOption()">Add Option</button>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-success" />
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        let optionIndex = 2;
+        function addOption() {
+            const newOption = `<div class="input-group mb-2">
+                <input type="text" name="Options[${optionIndex}]" class="form-control" placeholder="Option ${optionIndex + 1}" required />
+                <button type="button" class="btn btn-danger" onclick="removeOption(this)">Remove</button>
+            </div>`;
+            $('#optionsContainer').append(newOption);
+            optionIndex++;
+        }
+
+        function removeOption(button) {
+            $(button).parent().remove();
+        }
+    </script>
+}

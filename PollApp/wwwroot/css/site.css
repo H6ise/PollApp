@@ -18,5 +18,36 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+    padding-top: 50px;
+    padding-bottom: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+    .card:hover {
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+.btn {
+    transition: background-color 0.3s;
+}
+
+.form-check {
+    margin-bottom: 10px;
+}
+
+.text-danger {
+    font-size: 0.875em;
+}
+
+.pagination .page-item.disabled .page-link {
+    cursor: not-allowed;
 }

@@ -1,0 +1,63 @@
+﻿@* Views/Poll/Details.cshtml *@
+@model PollApp.Models.Poll
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<h1>@Model.Title</h1>
+<p>@Model.Description</p>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <form id="voteForm" asp-action="Vote" method="post">
+        @Html.AntiForgeryToken()
+        @foreach (var option in Model.Options)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="optionId" id="option_@option.Id" value="@option.Id" />
+                <label class="form-check-label" for="option_@option.Id">@option.Text</label>
+            </div>
+        }
+        <button type="submit" class="btn btn-success mt-3">Submit Vote</button>
+    </form>
+}
+else
+{
+    <p><a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Poll", new { id = Model.Id })">Login</a> to vote.</p>
+}
+
+<a asp-action="Results" asp-route-id="@Model.Id" class="btn btn-info mt-3">View Results</a>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        $("#voteForm").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.href = '/Poll/Results/@Model.Id';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/resultsHub")
+            .build();
+
+        connection.start().then(() => {
+            connection.invoke("JoinPoll", @Model.Id);
+        }).catch(err => console.error(err));
+    </script>
+}

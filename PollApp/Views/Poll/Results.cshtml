@@ -1,0 +1,48 @@
+﻿@* Views/Poll/Results.cshtml *@
+@model Dictionary<string, int>
+
+@{
+    ViewData["Title"] = "Poll Results";
+}
+
+<h1>Poll Results</h1>
+
+<canvas id="resultsChart" width="400" height="400"></canvas>
+
+<p>Total Votes: @Model.Values.Sum()</p>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        const chartData = {
+            labels: [@Html.Raw(string.Join(",", Model.Keys.Select(k => $"'{k}'")))],
+            datasets: [{
+                data: [@Html.Raw(string.Join(",", Model.Values))],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+            }]
+        };
+        const chart = new Chart(ctx, {
+            type: 'pie',
+            data: chartData,
+            options: { responsive: true }
+        });
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/resultsHub")
+            .build();
+
+        connection.on("UpdateResults", (pollId, results) => {
+            if (pollId === @ViewBag.PollId) {
+                chart.data.labels = Object.keys(results);
+                chart.data.datasets[0].data = Object.values(results);
+                chart.update();
+            }
+        });
+
+        connection.start().then(() => {
+            connection.invoke("JoinPoll", @ViewBag.PollId);
+        }).catch(err => console.error(err));
+    </script>
+}
