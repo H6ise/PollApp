@@ -37,7 +37,6 @@ app.MapControllerRoute(
     pattern: "{controller=Poll}/{action=Index}/{id?}");
 app.MapHub<ResultsHub>("/resultsHub");
 
-// Seeder (wrap in try-catch for debugging if error persists)
 try
 {
     using (var scope = app.Services.CreateScope())
