@@ -34,19 +34,16 @@ namespace PollApp.Services
                 Title = model.Title,
                 Description = model.Description,
                 StartDate = DateTime.UtcNow,
+                EndDate = model.EndDate,
                 IsActive = true
             };
 
             _context.Polls.Add(poll);
             await _context.SaveChangesAsync();
 
-            foreach (var optionText in model.Options)
+            foreach (var optionText in model.Options.Where(o => !string.IsNullOrWhiteSpace(o)))
             {
-                if (!string.IsNullOrWhiteSpace(optionText))
-                {
-                    var option = new Option { Text = optionText, PollId = poll.Id };
-                    _context.Options.Add(option);
-                }
+                _context.Options.Add(new Option { Text = optionText, PollId = poll.Id });
             }
 
             await _context.SaveChangesAsync();

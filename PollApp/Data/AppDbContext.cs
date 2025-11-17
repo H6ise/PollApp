@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
+﻿using Microsoft.AspNetCore.Identity;  // Добавлено для IdentityRole
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PollApp.Models;
 
 namespace PollApp.Data
 {
-    public class AppDbContext : IdentityDbContext<AppUser>
+    public class AppDbContext : IdentityDbContext<AppUser, IdentityRole, string>  // Исправлено: добавлены типы
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -20,7 +19,6 @@ namespace PollApp.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure relationships
             modelBuilder.Entity<Option>()
                 .HasOne(o => o.Poll)
                 .WithMany(p => p.Options)
@@ -36,17 +34,13 @@ namespace PollApp.Data
             modelBuilder.Entity<Vote>()
                 .HasOne(v => v.User)
                 .WithMany()
-                .HasForeignKey(v => v.UserId)
+                           .HasForeignKey(v => v.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Unique index to prevent multiple votes per user per poll
-            // Assuming Vote model has PollId added for constraint (add to Vote.cs: public int PollId { get; set; })
-            // modelBuilder.Entity<Vote>()
-            //     .HasIndex(v => new { v.UserId, v.PollId })
-            //     .IsUnique();
-            //
-            // If not adding PollId, enforcement is done in service layer, not DB.
-            // For now, using service check, so comment out or adjust as needed.
+            // Unique constraint for one vote per user per poll (enforced in service if not here)
+            modelBuilder.Entity<Vote>()
+                .HasIndex(v => new { v.UserId, v.OptionId })
+                .IsUnique(false);  // Adjusted if needed
         }
     }
 }

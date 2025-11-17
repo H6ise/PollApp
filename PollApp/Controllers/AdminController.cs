@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;  // Добавлено для UserManager, IdentityRole
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PollApp.Data;
@@ -16,11 +17,11 @@ namespace PollApp.Controllers
     public class AdminController : Controller
     {
         private readonly IPollService _pollService;
-        private readonly UserManager<AppUser> _userManager;
+        private readonly UserManager<AppUser> _userManager;  // Исправлено: <AppUser>
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AppDbContext _context;
 
-        public AdminController(IPollService pollService, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, AppDbContext context)
+        public AdminController(IPollService pollService, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, AppDbContext context)  // Исправлено: <AppUser>
         {
             _pollService = pollService;
             _userManager = userManager;
@@ -68,8 +69,10 @@ namespace PollApp.Controllers
             {
                 Title = poll.Title,
                 Description = poll.Description,
+                EndDate = poll.EndDate,
                 Options = poll.Options.Select(o => o.Text).ToList()
             };
+            ViewBag.PollId = id;  // Для формы Edit
             return View(model);
         }
 
@@ -86,6 +89,7 @@ namespace PollApp.Controllers
 
             poll.Title = model.Title;
             poll.Description = model.Description;
+            poll.EndDate = model.EndDate;
 
             _context.Options.RemoveRange(poll.Options);
             await _context.SaveChangesAsync();
@@ -109,7 +113,7 @@ namespace PollApp.Controllers
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (poll != null)
             {
-                foreach (var option in poll.Options)
+                foreach (var option in poll.Options.ToList())
                 {
                     _context.Votes.RemoveRange(option.Votes);
                 }

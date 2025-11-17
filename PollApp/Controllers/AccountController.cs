@@ -1,43 +1,45 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;  // Добавлено
 using Microsoft.AspNetCore.Mvc;
 using PollApp.Models;
-using PollApp.ViewModels; // Assume RegisterViewModel and LoginViewModel in ViewModels
+using PollApp.ViewModels;
 
 namespace PollApp.Controllers
 {
     [AllowAnonymous]
     public class AccountController : Controller
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly SignInManager<AppUser> _signInManager;
+        private readonly UserManager<AppUser> _userManager;  // Исправлено
+        private readonly SignInManager<AppUser> _signInManager;  // Исправлено
 
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)  // Исправлено
         {
             _userManager = userManager;
             _signInManager = signInManager;
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
                 var user = new AppUser { UserName = model.Email, Email = model.Email };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "User"); // Default role
+                    await _userManager.AddToRoleAsync(user, "User");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Poll");
+                    return LocalRedirect(returnUrl ?? Url.Content("~/"));
                 }
                 foreach (var error in result.Errors)
                 {
@@ -68,12 +70,10 @@ namespace PollApp.Controllers
                 }
                 if (result.IsLockedOut)
                 {
-                    ModelState.AddModelError(string.Empty, "This account has been locked out.");
+                    ModelState.AddModelError(string.Empty, "Аккаунт заблокирован.");
+                    return View(model);
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                }
+                ModelState.AddModelError(string.Empty, "Неверный логин или пароль.");
             }
             return View(model);
         }

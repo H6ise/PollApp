@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// ViewModels/PollViewModel.cs
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace PollApp.ViewModels
@@ -11,6 +13,10 @@ namespace PollApp.ViewModels
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
         public string Description { get; set; }
+
+        [DataType(DataType.DateTime)]
+        [Display(Name = "End Date")]
+        public DateTime? EndDate { get; set; }
 
         [Required(ErrorMessage = "At least two options are required.")]
         [MinLength(2, ErrorMessage = "At least two options are required.")]
