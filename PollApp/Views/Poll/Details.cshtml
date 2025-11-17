@@ -1,34 +1,32 @@
 ﻿@* Views/Poll/Details.cshtml *@
+
 @model PollApp.Models.Poll
 
 @{
     ViewData["Title"] = Model.Title;
 }
 
-<h1>@Model.Title</h1>
+<h2>@Model.Title</h2>
 <p>@Model.Description</p>
 
 @if (User.Identity.IsAuthenticated)
 {
-    <form id="voteForm" asp-action="Vote" method="post">
-        @Html.AntiForgeryToken()
+    <form asp-action="Vote" method="post">
         @foreach (var option in Model.Options)
         {
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="optionId" id="option_@option.Id" value="@option.Id" />
-                <label class="form-check-label" for="option_@option.Id">@option.Text</label>
+            <div>
+                <input type="radio" name="optionId" value="@option.Id" required /> @option.Text
             </div>
         }
-        <button type="submit" class="btn btn-success mt-3">Submit Vote</button>
+        <button type="submit">Голосовать</button>
     </form>
 }
 else
 {
-    <p><a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Poll", new { id = Model.Id })">Login</a> to vote.</p>
+    <p>Для голосования необходимо <a href="@Url.Action("Login", "Account")">войти</a>.</p>
 }
 
-<a asp-action="Results" asp-route-id="@Model.Id" class="btn btn-info mt-3">View Results</a>
-
+<a href="@Url.Action("Results", "Poll", new { id = Model.Id })">Посмотреть результаты</a>
 @section Scripts {
     <script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>

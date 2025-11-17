@@ -2,33 +2,20 @@
 @model List<PollApp.Models.Poll>
 
 @{
-    ViewData["Title"] = "Active Polls";
+    ViewData["Title"] = "Опросы";
 }
 
-<h1>Active Polls</h1>
-
-<div class="row">
-    @foreach (var poll in Model)
-    {
-        <div class="col-md-4 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">@poll.Title</h5>
-                    <p class="card-text">@poll.Description</p>
-                    <a asp-action="Details" asp-route-id="@poll.Id" class="btn btn-primary">View & Vote</a>
-                </div>
-            </div>
-        </div>
-    }
-</div>
-
-<nav aria-label="Pagination">
-    <ul class="pagination">
-        <li class="page-item @(ViewBag.Page > 1 ? "" : "disabled")">
-            <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page - 1)">Previous</a>
-        </li>
-        <li class="page-item @(ViewBag.HasNext ? "" : "disabled")">
-            <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page + 1)">Next</a>
-        </li>
-    </ul>
-</nav>
+<h2>Список опросов</h2>
+<ul>
+@foreach (var poll in Model)
+{
+    <li>
+        <a href="@Url.Action("Details", "Poll", new { id = poll.Id })">@poll.Title</a>
+        <span>— @poll.Description</span>
+    </li>
+}
+</ul>
+@if (ViewBag.HasNext == true)
+{
+    <a href="@Url.Action("Index", new { page = (int)ViewBag.Page + 1 })">Следующая страница</a>
+}

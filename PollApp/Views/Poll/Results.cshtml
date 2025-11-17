@@ -1,15 +1,19 @@
 ﻿@* Views/Poll/Results.cshtml *@
+
 @model Dictionary<string, int>
 
 @{
-    ViewData["Title"] = "Poll Results";
+    ViewData["Title"] = "Результаты опроса";
 }
 
-<h1>Poll Results</h1>
-
-<canvas id="resultsChart" width="400" height="400"></canvas>
-
-<p>Total Votes: @Model.Values.Sum()</p>
+<h2>Результаты опроса</h2>
+<ul>
+@foreach (var result in Model)
+{
+    <li>@result.Key: @result.Value голос(ов)</li>
+}
+</ul>
+<a href="@Url.Action("Index", "Poll")">К списку опросов</a>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
