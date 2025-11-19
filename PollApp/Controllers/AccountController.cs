@@ -39,16 +39,14 @@ namespace PollApp.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    RegistrationDate = DateTime.UtcNow,
-                    IsActive = true
+                    LastName = model.LastName
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    // После успешной регистрации перенаправляем на страницу авторизации
+                    return RedirectToAction("Login", "Account");
                 }
 
                 foreach (var error in result.Errors)

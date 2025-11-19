@@ -43,17 +43,22 @@ namespace PollApp.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Vote(int optionId)
+        public async Task<IActionResult> Vote(int optionId, int pollId)
         {
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 await _voteService.VoteAsync(userId, optionId);
-                return Json(new { success = true, message = "Vote submitted successfully." });
+                // После голосования перенаправляем на результаты опроса
+                return RedirectToAction("Results", "Poll", new { id = pollId });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                // Можно добавить сообщение об ошибке во ViewBag или ModelState
+                ModelState.AddModelError(string.Empty, ex.Message);
+                // Получаем опрос для повторного отображения страницы Details
+                var poll = await _pollService.GetPollByIdAsync(pollId);
+                return View("Details", poll);
             }
         }
 
