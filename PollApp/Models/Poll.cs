@@ -15,6 +15,7 @@ namespace PollApp.Models
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsActive { get; set; }
+        public string HeaderImageUrl { get; set; } = "/images/default-header.png";  /* Шапка картинка */
         public virtual ICollection<Option> Options { get; set; } = new List<Option>();
     }
 }

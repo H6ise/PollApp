@@ -3,6 +3,14 @@
 @* Views/Shared/_LoginPartial.cshtml *@
 @inject SignInManager<AppUser> SignInManager
 @inject UserManager<AppUser> UserManager
-
+@if (SignInManager.IsSignedIn(User))
+{
+    <!-- Logged in content -->
+}
+else
+{
+    <a asp-controller="Account" asp-action="Login" class="btn btn-success me-2">Авторизация</a>
+    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success">Регистрация</a>
+}
 <ul class="navbar-nav">
 <Component /></ul>

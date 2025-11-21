@@ -1,30 +1,36 @@
-﻿// wwwroot/js/site.js
-// Custom JavaScript for the application
-// Includes AJAX helpers, form enhancements, etc.
+﻿// wwwroot/js/site.js (JS для меню, модала без Bootstrap)
+document.addEventListener('DOMContentLoaded', function () {
+    const menuBtn = document.querySelector('.menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarClose = document.querySelector('.sidebar-close');
 
-$(document).ready(function () {
-    // Example: Global AJAX error handling
-    $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
-        console.error("AJAX Error: " + thrownError);
-        alert("An error occurred. Please try again.");
+    menuBtn.addEventListener('click', () => sidebar.classList.add('open'));
+    sidebarClose.addEventListener('click', () => sidebar.classList.remove('open'));
+
+    // Profile Modal
+    const profileIcon = document.querySelector('.profile-icon');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalClose = document.querySelector('.close-btn');
+
+    profileIcon.addEventListener('click', () => modalOverlay.classList.add('open'));
+    modalClose.addEventListener('click', () => modalOverlay.classList.remove('open'));
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) modalOverlay.classList.remove('open');
     });
-
-    // If needed, add more global behaviors
 });
 
-// Function to add option (can be used in Create/Edit if not inline in views)
-function addOption(containerId) {
-    let optionIndex = $(`#${containerId} .input-group`).length;
-    const newOption = `
-        <div class="input-group mb-2">
-            <input type="text" name="Options[${optionIndex}]" class="form-control" placeholder="New Option" required />
-            <button type="button" class="btn btn-danger" onclick="removeOption(this)">Remove</button>
-        </div>`;
-    $(`#${containerId}`).append(newOption);
+/* wwwroot/js/site.js (JS для меню, модала) */
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
-function removeOption(button) {
-    $(button).parent().remove();
+function toggleProfileModal() {
+    document.getElementById('profileModal').classList.toggle('open');
 }
 
-// If separating SignalR logic, but since it's in views, optional
+document.addEventListener('click', function (event) {
+    const modal = document.getElementById('profileModal');
+    if (!modal.contains(event.target) && !document.querySelector('.avatar').contains(event.target)) {
+        modal.classList.remove('open');
+    }
+});

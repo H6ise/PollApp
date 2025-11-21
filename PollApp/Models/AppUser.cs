@@ -19,6 +19,7 @@ namespace PollApp.Models
         public string? ProfilePictureUrl { get; set; }
 
         public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
+        public string ProfileImageUrl { get; set; } = "/images/default-avatar.png";
 
         public bool IsActive { get; set; } = true;
 

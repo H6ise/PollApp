@@ -1,112 +1,67 @@
-﻿@* Views/Shared/_Layout.cshtml (шапка улучшена: точный match скриншота, поиск с иконкой, выплывающее меню с иконками) *@
+﻿@* Views/Shared/_Layout.cshtml (полный файл: шапка 70px, белый фон, тень; бургер зелёный слева, логотип зелёный, поиск центр светло-серый с зелёной иконкой, справа иконки + аватар с модалом; меню слева как Google Workspace; белый/зелёный стиль) *@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - PollApp</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="bg-light">
-    <header>
-        <nav class="navbar navbar-expand navbar-light bg-white border-bottom py-1">
-            <div class="container-fluid px-3">
-                <!-- Кнопка меню слева -->
-                <button class="btn btn-link p-0 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
-                    <i class="fas fa-bars fa-lg text-dark"></i>
-                </button>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <!-- Левая часть: бургер + логотип -->
+            <button class="burger-menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <a class="logo" asp-controller="Poll" asp-action="Index">
+                <span>Полес.Формы</span>  <!-- Зеленый логотип -->
+            </a>
 
-                <!-- Логотип -->
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Poll" asp-action="Index">
-                    <img src="https://www.gstatic.com/images/branding/product/1x/forms_2020q4_48dp.png" alt="Forms" width="28" height="28" class="me-1" />
-                    <span class="text-dark fs-5 fw-medium">Формы</span>
-                </a>
+            <!-- Центр: поиск -->
+            <form class="search-bar">
+                <input type="search" placeholder="Поиск..." />
+                <i class="fas fa-search search-icon"></i>
+            </form>
 
-                <!-- Поиск в центре (hidden on small screens) -->
-                <form class="d-none d-md-flex mx-auto" style="width: 40%;">
-                    <div class="input-group">
-                        <input class="form-control border-0 bg-light rounded-pill" type="search" placeholder="Поиск" aria-label="Search">
-                        <button class="btn btn-link position-absolute end-0 top-0 bottom-0 pe-3" type="submit">
-                            <i class="fas fa-search text-muted"></i>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Иконки справа -->
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <a class="nav-link p-0" href="#"><i class="fas fa-th fa-lg text-dark"></i></a>
-                    </li>
-                    <li class="nav-item me-3">
-                        <a class="nav-link p-0" href="#"><i class="fas fa-question-circle fa-lg text-dark"></i></a>
-                    </li>
-                    <li class="nav-item me-3">
-                        <a class="nav-link p-0" href="#"><i class="fas fa-cog fa-lg text-dark"></i></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link p-0" href="#"><img src="https://via.placeholder.com/32" class="rounded-circle border" alt="Profile"></a>
-                    </li>
-                </ul>
+            <!-- Правая часть: иконки + аватар -->
+            <div class="header-right">
+                <i class="fas fa-th header-icon"></i>  <!-- Галерея -->
+                <i class="fas fa-question-circle header-icon"></i>  <!-- Помощь -->
+                <i class="fas fa-cog header-icon"></i>  <!-- Настройки -->
+                <img src="/images/avatar.png" class="avatar" alt="Avatar" onclick="toggleProfileModal()" />
             </div>
-        </nav>
-    </header>
-    
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
-        <div class="offcanvas-header border-bottom bg-light">
-            <h6 class="offcanvas-title text-dark fw-bold" id="sidebarMenuLabel">Google Workspace</h6>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body p-0">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex align-items-center">
-                    <img src="https://via.placeholder.com/24" class="me-3 rounded" alt="Profile Icon">
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Profile</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-briefcase me-3 fa-lg text-primary"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Google Workspace</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-file-alt me-3 fa-lg text-blue"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Формы</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-file-word me-3 fa-lg text-blue"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Документы</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-table me-3 fa-lg text-green"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Таблицы</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-file-powerpoint me-3 fa-lg text-red"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Презентации</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-cloud me-3 fa-lg text-blue"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Диск</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-cog me-3 fa-lg text-gray"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Настройки</a>
-                </li>
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="fas fa-question-circle me-3 fa-lg text-gray"></i>
-                    <a href="#" class="text-decoration-none text-dark flex-grow-1">Справка/отзывы</a>
-                </li>
-            </ul>
+    </header>
+
+    <!-- Меню слева (как Google Workspace) -->
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        <ul>
+            <li><i class="fas fa-poll"></i> Формы</li>
+            <li><i class="fas fa-file-alt"></i> Документы</li>
+            <li><i class="fas fa-table"></i> Таблицы</li>
+            <li><i class="fas fa-file-powerpoint"></i> Презентации</li>
+            <li><i class="fas fa-cloud"></i> Диск</li>
+            <li><i class="fas fa-cog"></i> Настройки</li>
+            <li><i class="fas fa-question-circle"></i> Справка/отзывы</li>
+        </ul>
+    </div>
+
+    <!-- Всплывающее меню профиля (белая карточка, тень, скругления 12px) -->
+    <div class="profile-modal" id="profileModal">
+        <div class="profile-content">
+            <img src="/images/avatar-large.png" class="profile-avatar" alt="Avatar">
+            <h3>Имя Пользователя</h3>
+            <p>email@example.com</p>
+            <button class="profile-btn">Выйти</button>
         </div>
     </div>
 
-    <main role="main" class="container-fluid mt-3">
+    <main class="main-content">
         @RenderBody()
     </main>
 
-    <script src="~/lib/jquery/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
