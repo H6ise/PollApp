@@ -1,53 +1,82 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-    padding-top: 50px;
-    padding-bottom: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fafafa;
+    min-height: 100vh;
 }
 
 .navbar {
-    margin-bottom: 20px;
+    height: 56px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.card {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: 0.3s;
+.plus-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(0deg, #4285f4 25%, #34a853 25%, 50%, #fbbc05 50%, 75%, #ea4335 75%);
+    border-radius: 50%;
+    position: relative;
 }
 
-    .card:hover {
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    .plus-icon::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 4px;
+        background: white;
     }
 
-.btn {
-    transition: background-color 0.3s;
+    .plus-icon::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(90deg);
+        width: 20px;
+        height: 4px;
+        background: white;
+    }
+
+.card.shadow {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
 }
 
-.form-check {
-    margin-bottom: 10px;
+.hover-shadow:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
 }
 
-.text-danger {
-    font-size: 0.875em;
+.text-blue {
+    color: #4285f4;
 }
 
-.pagination .page-item.disabled .page-link {
-    cursor: not-allowed;
+.text-green {
+    color: #34a853;
+}
+
+.text-yellow {
+    color: #fbbc05;
+}
+
+.text-red {
+    color: #ea4335;
+}
+
+.text-gray {
+    color: #5f6368;
+}
+
+@media (max-width: 576px) {
+    .navbar {
+        height: 48px;
+    }
+
+    .row.g-3 > .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    h6 {
+        font-size: 0.95rem;
+    }
 }
