@@ -9,7 +9,7 @@ namespace PollApp.Services
     {
         Task<Poll> CreatePollAsync(PollViewModel model);
         Task<Poll> SavePollAsync(Poll poll, string userId);
-        Task<List<Poll>> GetActivePollsAsync(int page, int pageSize);
+        Task<List<Poll>> GetActivePollsAsync(int page, int pageSize, string ownerFilter = null, string sort = null);
         Task<Dictionary<Option, int>> GetResultsAsync(int pollId);
         Task RecordVoteAsync(int pollId, int optionId, string voterIdentifier);
         Task<Poll> GetPollByIdAsync(int id);
@@ -20,5 +20,13 @@ namespace PollApp.Services
         // 🆕 Управление опросом: переименование и удаление
         Task RenamePollAsync(int id, string newTitle, string userId);
         Task DeletePollAsync(int id, string userId);
+
+        // 🆕 Загрузка изображений и обновление URL
+        Task<string> SaveHeaderImageAsync(int pollId, byte[] data, string fileName, string userId);
+
+        // 🆕 Обновление порядка и метаданных
+        Task UpdateOrderAsync(Dictionary<int,int> orderById, string userId);
+        Task MarkViewedAsync(int pollId, string userId);
+        Task MarkModifiedAsync(int pollId, string userId);
     }
 }

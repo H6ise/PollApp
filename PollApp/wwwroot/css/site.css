@@ -375,7 +375,7 @@ a.poll-card-link {
 
 /* --- JS Logic Helpers --- */
 .loader-fade {
-    opacity: 1;
+    opacity: 0;
     transition: opacity 0.5s ease;
 }
 
@@ -876,4 +876,20 @@ a.poll-card-link {
 /* small responsive tweaks for list view */
 .poll-grid.list-view .poll-item { display:flex; align-items:center; gap:16px; }
 .poll-grid.list-view .poll-item .card { width:100%; }
+
+
+/* Confirm modal */
+.confirm-modal {
+    position: fixed;
+    left: 0; top: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.35); z-index: 3000;
+}
+.confirm-modal-content { background:#fff; padding:18px; border-radius:8px; width:420px; box-shadow:var(--shadow); }
+
+/* Dragging visual */
+.poll-item.dragging { opacity: 0.5; transform: scale(0.98); }
+
+/* ensure poll-item layout for list/grid */
+.poll-item { display:block; }
 
