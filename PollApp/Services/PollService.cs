@@ -253,5 +253,32 @@ namespace PollApp.Services
                 .Take(pageSize)
                 .ToListAsync();
         }
+
+        // *** НОВЫЕ МЕТОДЫ: Rename и Delete ***
+        public async Task RenamePollAsync(int id, string newTitle, string userId)
+        {
+            var poll = await _context.Polls.FirstOrDefaultAsync(p => p.Id == id);
+            if (poll == null) throw new KeyNotFoundException("Poll not found");
+            if (poll.CreatorUserId != userId) throw new UnauthorizedAccessException("Only owner can rename this poll");
+            poll.Title = newTitle;
+            await _context.SaveChangesAsync();
+            _cache.Remove("ActivePolls_*");
+        }
+
+        public async Task DeletePollAsync(int id, string userId)
+        {
+            var poll = await _context.Polls.Include(p => p.Options).FirstOrDefaultAsync(p => p.Id == id);
+            if (poll == null) throw new KeyNotFoundException("Poll not found");
+            if (poll.CreatorUserId != userId) throw new UnauthorizedAccessException("Only owner can delete this poll");
+
+            // Удалим опции и голоса (CASCADE не гарантируем)
+            var optionIds = poll.Options.Select(o => o.Id).ToList();
+            var votes = _context.Votes.Where(v => optionIds.Contains(v.OptionId));
+            _context.Votes.RemoveRange(votes);
+            _context.Options.RemoveRange(poll.Options);
+            _context.Polls.Remove(poll);
+            await _context.SaveChangesAsync();
+            _cache.Remove("ActivePolls_*");
+        }
     }
 }

@@ -22,11 +22,24 @@ namespace PollApp.Controllers
             _voteService = voteService;
         }
 
-        public async Task<IActionResult> Index(int page = 1)
+        public async Task<IActionResult> Index(int page = 1, string sort = "dateview")
         {
-            var polls = await _pollService.GetActivePollsAsync(page, 10);
+            // Поддержка сортировки (пока реализована минимально на уровне сервиса/запроса)
+            var polls = await _pollService.GetActivePollsAsync(page, 50);
+
+            // Демонстрационная сортировка на стороне сервера для нескольких опций
+            polls = sort switch
+            {
+                "dateview" => polls.OrderByDescending(p => p.StartDate).ToList(),
+                "mymod" => polls.OrderByDescending(p => p.StartDate).ToList(), // TODO: заменить реальной логикой
+                "datechanged" => polls.OrderByDescending(p => p.StartDate).ToList(),
+                "title" => polls.OrderBy(p => p.Title).ToList(),
+                _ => polls
+            };
+
             ViewBag.Page = page;
-            ViewBag.HasNext = polls.Count == 10;
+            ViewBag.Sort = sort;
+            ViewBag.HasNext = polls.Count == 50;
             return View(polls);
         }
 
@@ -115,6 +128,39 @@ namespace PollApp.Controllers
             }
             // Если ошибка, возвращаем пользователя обратно в конструктор
             return View("CreateEdit", model);
+        }
+
+        // Новые эндпоинты: Rename / Delete
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> Rename(int id, [FromForm] string title)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                await _pollService.RenamePollAsync(id, title, userId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                await _pollService.DeletePollAsync(id, userId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

@@ -16,5 +16,9 @@ namespace PollApp.Services
 
         // 🆕 ДОБАВЛЕНО: Получить опросы, созданные конкретным пользователем
         Task<List<Poll>> GetPollsByCreatorAsync(string creatorUserId, int page, int pageSize);
+
+        // 🆕 Управление опросом: переименование и удаление
+        Task RenamePollAsync(int id, string newTitle, string userId);
+        Task DeletePollAsync(int id, string userId);
     }
 }

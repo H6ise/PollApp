@@ -4,20 +4,35 @@
     ViewData["Title"] = "Формы";
     var templates = new List<(string Title, string Description, string Url)>
     {
-        ("Пустая форма", "Начните с нуля", "/Admin/Create"),
+        ("Пустая форма", "Начните с нуля", "/Poll/CreateEdit"),
         ("Анкета", "Соберите данные", "/Admin/Create?template=Survey"),
-        ("Опрос", "Быстрый опрос мнения", "/Admin/Create?template=Poll")
+        ("Опрос", "Быстрый опрос мнения", "/Poll/CreateEdit?template=Poll")
     };
 }
 
 <div class="page-content-wrapper">
+    <!-- Loader overlay -->
+    <div id="pageLoader" class="page-loader open">
+        <div class="spinner"></div>
+    </div>
+
     <div class="creation-block">
-        <h2>Создать форму</h2>
-        <div class="card-grid template-grid">
+        <div class="creation-header-row" style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Создать форму</h2>
+            <div style="display:flex;gap:12px;align-items:center">
+                <div class="templates-label">Галерея шаблонов</div>
+                <select id="templateViewMode" class="form-select" style="height:36px;">
+                    <option value="grid">Сетка</option>
+                    <option value="carousel">Лента</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card-grid template-grid" id="templateGallery">
             @foreach (var template in templates)
             {
-                <a href="@template.Url" class="poll-card-link">
-                    <div class="card template-card loader-fade">
+                <a href="@template.Url" class="poll-card-link template-thumb" target="_blank">
+                    <div class="card template-card">
                         <div class="card-header">@template.Title</div>
                         <img src="/images/template-preview.png" alt="Превью" class="card-img">
                         <div class="card-body">@template.Description</div>
@@ -28,52 +43,181 @@
     </div>
 
     <div class="recent-forms-block">
-        <div class="recent-forms-header">
-            <h2>Недавние формы</h2>
-            <button onclick="toggleView()" class="view-toggle green-btn">
-                <i class="fas fa-list-ul"></i> / <i class="fas fa-th-large"></i> Переключить вид
-            </button>
+        <div class="recent-forms-header" style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:16px">
+                <h2>Мои формы</h2>
+                <div class="owner-filter">Владелец: <select id="ownerFilter"><option value="me">Я</option><option value="all">Все</option></select></div>
+                <div class="sort-select">Сортировка: <select id="sortSelect"><option value="dateview">По дате просмотра</option><option value="mymod">По дате моих изменений</option><option value="datechanged">По дате изменений</option><option value="title">Название</option></select></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+                <button id="toggleListBtn" class="green-btn" title="Переключить вид"><i class="fas fa-list-ul"></i></button>
+                <button id="toggleGridBtn" class="green-btn" title="Сетка"><i class="fas fa-th-large"></i></button>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <a href="/Account/Login" class="green-btn">Войти</a>
+                    <a href="/Account/Register" class="green-btn">Регистрация</a>
+                }
+            </div>
         </div>
 
         <div class="card-grid poll-grid" id="pollGrid">
             @foreach (var poll in Model)
             {
-                <a asp-action="Details" asp-route-id="@poll.Id" class="poll-card-link">
-                    <div class="card poll-card loader-fade">
-                        <div class="card-header">@poll.Title</div>
-                        <img src="@poll.HeaderImageUrl" onerror="this.src='/images/default-header.png'" alt="Шапка" class="card-img">
-                        <div class="card-body">@poll.Description</div>
-                        <div class="card-footer">@poll.StartDate.ToShortDateString() - @(poll.IsActive ? "Активен" : "Завершён")</div>
+                <div class="poll-item" data-id="@poll.Id" data-url="@Url.Action("Details","Poll", new { id = poll.Id })">
+                    <a class="poll-card-link card-link" href="@Url.Action("Details","Poll", new { id = poll.Id })">
+                        <div class="card poll-card" data-poll-id="@poll.Id">
+                            <div class="card-header" data-header>@poll.Title</div>
+                            <img src="@poll.HeaderImageUrl" onerror="this.src='/images/default-header.png'" alt="Шапка" class="card-img" data-img>
+                            <div class="card-body">@poll.Description</div>
+                            <div class="card-footer">@poll.StartDate.ToShortDateString() - @(poll.IsActive ? "Активен" : "Завершён")</div>
+                        </div>
+                    </a>
+                    <div class="card-actions">
+                        <button class="action-btn open-new" title="Открыть в новой вкладке"><i class="fas fa-external-link-alt"></i></button>
+                        <button class="action-btn edit-title" title="Переименовать"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn upload-image" title="Загрузить изображение"><i class="fas fa-upload"></i></button>
+                        <button class="action-btn delete-poll" title="Удалить"><i class="fas fa-trash"></i></button>
                     </div>
-                </a>
+                </div>
             }
         </div>
     </div>
 </div>
 
+<!-- Hidden global file input used to upload header image (client-side preview only) -->
+<input id="globalFileInput" type="file" accept="image/*" style="display:none" />
+
 @section Scripts {
     <script>
-        // Функция поиска (использует поле поиска в шапке)
-        function searchPolls(value) {
-            const cards = document.querySelectorAll('.poll-card-link');
-            cards.forEach(cardLink => {
-                const card = cardLink.querySelector('.card');
-                const isMatch = card.textContent.toLowerCase().includes(value.toLowerCase());
-                cardLink.style.display = isMatch ? 'block' : 'none';
-            });
-        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const loader = document.getElementById('pageLoader');
+            const cards = document.querySelectorAll('.card');
 
-        // Переключение вида (сетка/список)
-        function toggleView() {
-            document.getElementById('pollGrid').classList.toggle('list-view');
-        }
+            // Hide loader and reveal cards
+            setTimeout(() => {
+                loader.classList.remove('open');
+                cards.forEach((card, index) => setTimeout(() => card.classList.add('visible'), index * 60));
+            }, 350);
 
-        // Loader: плавное появление
-        window.onload = function () {
-            const items = document.querySelectorAll('.loader-fade');
-            items.forEach((item, index) => {
-                setTimeout(() => item.style.opacity = 1, index * 100);
+            // Sort select change -> reload with query param
+            const sortSelect = document.getElementById('sortSelect');
+            sortSelect.addEventListener('change', function () {
+                const s = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('sort', s);
+                window.location.href = url.toString();
             });
-        };
+
+            // View toggles
+            document.getElementById('toggleListBtn').addEventListener('click', () => document.getElementById('pollGrid').classList.add('list-view'));
+            document.getElementById('toggleGridBtn').addEventListener('click', () => document.getElementById('pollGrid').classList.remove('list-view'));
+
+            // Card actions
+            document.getElementById('pollGrid').addEventListener('click', async function (e) {
+                const item = e.target.closest('.poll-item');
+                if (!item) return;
+                const pollId = item.dataset.id;
+                const url = item.dataset.url;
+
+                if (e.target.closest('.open-new')) {
+                    window.open(url, '_blank');
+                    return;
+                }
+
+                if (e.target.closest('.edit-title')) {
+                    startRename(item, pollId);
+                    return;
+                }
+
+                if (e.target.closest('.delete-poll')) {
+                    if (!confirm('Удалить опрос?')) return;
+                    try {
+                        const res = await fetch('/Poll/Delete/' + pollId, { method: 'POST', credentials: 'same-origin' });
+                        if (res.ok) {
+                            item.remove();
+                        } else {
+                            const txt = await res.text(); alert('Ошибка: ' + txt);
+                        }
+                    } catch (err) { alert(err); }
+                    return;
+                }
+
+                if (e.target.closest('.upload-image')) {
+                    const fileInput = document.getElementById('globalFileInput');
+                    fileInput._targetItem = item;
+                    fileInput.click();
+                    return;
+                }
+            });
+
+            // Global file input change -> preview image in card (client-side)
+            document.getElementById('globalFileInput').addEventListener('change', function (ev) {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const item = ev.target._targetItem;
+                    if (!item) return;
+                    const img = item.querySelector('[data-img]');
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                // reset
+                this.value = null;
+            });
+
+            function startRename(item, pollId) {
+                const header = item.querySelector('[data-header]');
+                const oldTitle = header.textContent.trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = oldTitle;
+                input.className = 'inline-rename-input';
+                header.replaceWith(input);
+                input.focus();
+
+                const finish = async (save) => {
+                    const newTitle = input.value.trim();
+                    const placeholder = document.createElement('div');
+                    placeholder.setAttribute('data-header', '');
+                    placeholder.className = 'card-header';
+                    placeholder.textContent = save ? newTitle || oldTitle : oldTitle;
+                    input.replaceWith(placeholder);
+
+                    if (save && newTitle && newTitle !== oldTitle) {
+                        try {
+                            const fd = new FormData();
+                            fd.append('title', newTitle);
+                            const res = await fetch('/Poll/Rename/' + pollId, { method: 'POST', body: fd, credentials: 'same-origin' });
+                            if (!res.ok) {
+                                const txt = await res.text(); alert('Ошибка переименования: ' + txt);
+                                placeholder.textContent = oldTitle;
+                            }
+                        } catch (err) { alert(err); placeholder.textContent = oldTitle; }
+                    }
+                };
+
+                input.addEventListener('blur', () => finish(true));
+                input.addEventListener('keydown', (ke) => {
+                    if (ke.key === 'Enter') { input.blur(); }
+                    if (ke.key === 'Escape') { finish(false); }
+                });
+            }
+
+            // Template gallery mode switch
+            document.getElementById('templateViewMode').addEventListener('change', function () {
+                const mode = this.value;
+                const gallery = document.getElementById('templateGallery');
+                if (mode === 'carousel') {
+                    gallery.style.display = 'flex';
+                    gallery.style.overflowX = 'auto';
+                    gallery.style.gridTemplateColumns = 'none';
+                } else {
+                    gallery.style.display = '';
+                    gallery.style.overflowX = '';
+                }
+            });
+        });
     </script>
 }
