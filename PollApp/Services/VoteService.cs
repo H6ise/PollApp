@@ -61,7 +61,7 @@ namespace PollApp.Services
             {
                 UserId = userId,
                 OptionId = optionId,
-                VotedAt = DateTime.UtcNow
+                VoteDate = DateTime.UtcNow
             };
 
             _context.Votes.Add(vote);

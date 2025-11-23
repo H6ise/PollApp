@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PollApp.Models.Account
+namespace PollApp.ViewModels
 {
     public class RegisterViewModel
     {

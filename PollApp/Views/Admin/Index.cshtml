@@ -1,5 +1,4 @@
-﻿@* Views/Admin/Index.cshtml *@
-@model List<PollApp.Models.Poll>
+﻿@model List<PollApp.Models.Poll>
 
 @{
     ViewData["Title"] = "Admin Panel - Polls";
@@ -7,10 +6,12 @@
 
 <h1>Admin Panel - Polls</h1>
 
-<a asp-action="Create" class="btn btn-primary mb-3">Create New Poll</a>
-<a asp-action="Users" class="btn btn-secondary mb-3">Manage Users</a>
+<div class="admin-actions">
+    <a asp-action="Create" class="custom-btn primary-btn mb-3">Create New Poll</a>
+    <a asp-action="Users" class="custom-btn secondary-btn mb-3">Manage Users</a>
+</div>
 
-<table class="table table-striped">
+<table class="data-table striped-table">
     <thead>
         <tr>
             <th>Title</th>
@@ -25,26 +26,26 @@
         @foreach (var poll in Model)
         {
             <tr>
-                <td>@poll.Title</td>
-                <td>@poll.Description</td>
-                <td>@poll.StartDate.ToShortDateString()</td>
-                <td>@(poll.EndDate?.ToShortDateString() ?? "N/A")</td>
-                <td>@poll.IsActive</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@poll.Id" class="btn btn-warning btn-sm">Edit</a>
+                <td data-label="Title">@poll.Title</td>
+                <td data-label="Description">@poll.Description</td>
+                <td data-label="Start Date">@poll.StartDate.ToShortDateString()</td>
+                <td data-label="End Date">@(poll.EndDate?.ToShortDateString() ?? "N/A")</td>
+                <td data-label="Active">@(poll.IsActive ? "Yes" : "No")</td>
+                <td data-label="Actions" class="action-links">
+                    <a asp-action="Edit" asp-route-id="@poll.Id" class="custom-btn warning-btn sm-btn">Edit</a>
                     <form asp-action="Delete" asp-route-id="@poll.Id" method="post" style="display: inline;">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</button>
+                        <button type="submit" class="custom-btn danger-btn sm-btn" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</button>
                     </form>
-                    <a asp-controller="Poll" asp-action="Results" asp-route-id="@poll.Id" class="btn btn-info btn-sm">Results</a>
+                    <a asp-controller="Poll" asp-action="Results" asp-route-id="@poll.Id" class="custom-btn info-btn sm-btn">Results</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<nav aria-label="Pagination">
-    <ul class="pagination">
+<nav aria-label="Pagination" class="pagination-nav">
+    <ul class="pagination-list">
         <li class="page-item @(ViewBag.Page > 1 ? "" : "disabled")">
             <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page - 1)">Previous</a>
         </li>

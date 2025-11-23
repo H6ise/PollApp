@@ -1,42 +1,47 @@
-﻿@* Views/Account/Login.cshtml *@
-@model PollApp.ViewModels.LoginViewModel
+﻿@model PollApp.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Вход в аккаунт";
 }
 
-<h1>Login</h1>
+<div class="account-container">
+    <div class="account-card">
+        <h1>Вход</h1>
 
-<div class="row">
-    <div class="col-md-4">
         <form asp-action="Login" method="post">
+            @* Сводка ошибок валидации, не связанных с конкретным полем *@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
             <div class="form-group">
                 <label asp-for="Email" class="control-label"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Password" class="control-label"></label>
                 <input asp-for="Password" class="form-control" type="password" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
+
             <div class="form-group form-check">
                 <input asp-for="RememberMe" class="form-check-input" />
                 <label asp-for="RememberMe" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Login" class="btn btn-primary" />
+
+            <div class="form-group submit-group">
+                <button type="submit" class="custom-btn primary-btn full-width-btn">Войти</button>
             </div>
         </form>
+
+        <p class="account-link-footer">
+            Нет аккаунта? <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Зарегистрироваться</a>
+        </p>
     </div>
 </div>
 
-<p>
-    <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Register as a new user</a>
-</p>
-
 @section Scripts {
+@* Обязательно для клиентской валидации *@
     <partial name="_ValidationScriptsPartial" />
 }

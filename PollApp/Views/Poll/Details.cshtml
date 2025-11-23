@@ -1,61 +1,151 @@
-﻿@* Views/Poll/Details.cshtml *@
-
-@model PollApp.Models.Poll
+﻿@model PollApp.Models.Poll
 
 @{
     ViewData["Title"] = Model.Title;
 }
 
-<h2>@Model.Title</h2>
-<p>@Model.Description</p>
+<div class="poll-details-container">
 
-@if (User.Identity.IsAuthenticated)
-{
-    <form asp-action="Vote" method="post">
-        @foreach (var option in Model.Options)
-        {
-            <div>
-                <input type="radio" name="optionId" value="@option.Id" required /> @option.Text
-            </div>
-        }
-        <button type="submit">Голосовать</button>
-    </form>
-}
-else
-{
-    <p>Для голосования необходимо <a href="@Url.Action("Login", "Account")">войти</a>.</p>
-}
+    @* Вывод сообщений (успех/ошибка) *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="message success-message">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="message error-message">@TempData["ErrorMessage"]</div>
+    }
 
-<a href="@Url.Action("Results", "Poll", new { id = Model.Id })">Посмотреть результаты</a>
-@section Scripts {
-    <script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script src="~/lib/signalr/signalr.min.js"></script>
-    <script>
-        $("#voteForm").submit(function (e) {
-            e.preventDefault();
-            var form = $(this);
-            $.ajax({
-                url: form.attr("action"),
-                type: "POST",
-                data: form.serialize(),
-                success: function (data) {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.href = '/Poll/Results/@Model.Id';
-                    } else {
-                        alert(data.message);
-                    }
+    <div class="poll-card-view">
+        <div class="poll-header-area">
+            <h1>@Model.Title</h1>
+            <p class="poll-description">@Model.Description</p>
+        </div>
+
+        <form asp-action="Vote" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pollId" value="@Model.Id" />
+
+            <div class="poll-options-list">
+                <h3>Выберите ваш вариант:</h3>
+
+                @foreach (var option in Model.Options)
+                {
+                    <label class="option-radio-label">
+                        <input type="radio"
+                               name="selectedOptionId"
+                               value="@option.Id"
+                               required />
+                        <span class="option-text">@option.Text</span>
+                    </label>
                 }
-            });
-        });
+            </div>
 
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/resultsHub")
-            .build();
+            <div class="poll-actions">
+                <button type="submit" class="custom-btn primary-btn">Проголосовать</button>
+                <a asp-action="Results" asp-route-id="@Model.Id" class="custom-btn secondary-btn view-results-link">Посмотреть результаты</a>
+            </div>
+        </form>
+    </div>
+</div>
 
-        connection.start().then(() => {
-            connection.invoke("JoinPoll", @Model.Id);
-        }).catch(err => console.error(err));
-    </script>
+@section Styles {
+    <style>
+        /* Стили для страницы голосования */
+        .poll-details-container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+        }
+
+        .poll-card-view {
+            background-color: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .poll-header-area {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+            .poll-header-area h1 {
+                color: var(--dark-text);
+                font-size: 28px;
+                margin-top: 0;
+            }
+
+        .poll-description {
+            color: #5f6368;
+            font-size: 16px;
+        }
+
+        .poll-options-list h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark-text);
+        }
+
+        .option-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+            .option-radio-label:hover {
+                background-color: #f8f9fa;
+                border-color: var(--primary-green);
+            }
+
+            .option-radio-label input[type="radio"] {
+                margin-right: 15px;
+                transform: scale(1.2);
+                accent-color: var(--primary-green);
+            }
+
+        .option-text {
+            font-weight: 500;
+        }
+
+        .poll-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .view-results-link {
+            text-decoration: none;
+        }
+
+        /* Сообщения */
+        .message {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background-color: #e6ffed;
+            color: #38761d;
+            border: 1px solid #38761d;
+        }
+
+        .error-message {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+    </style>
 }

@@ -1,4 +1,7 @@
-﻿@* Views/Shared/_Layout.cshtml (полный файл: шапка 70px, белый фон, тень; бургер зелёный слева, логотип зелёный, поиск центр светло-серый с зелёной иконкой, справа иконки + аватар с модалом; меню слева как Google Workspace; белый/зелёный стиль) *@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -12,50 +15,64 @@
 <body>
     <header class="header">
         <div class="header-container">
-            <!-- Левая часть: бургер + логотип -->
-            <button class="burger-menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <button class="burger-menu" aria-label="Открыть меню" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
             <a class="logo" asp-controller="Poll" asp-action="Index">
-                <span>Полес.Формы</span>  <!-- Зеленый логотип -->
-            </a>
+                <span>Полес.Формы</span> </a>
 
-            <!-- Центр: поиск -->
-            <form class="search-bar">
-                <input type="search" placeholder="Поиск..." />
+            <form class="search-bar" onsubmit="return false;">
+                <input type="search" placeholder="Поиск..." oninput="searchPolls(this.value)" />
                 <i class="fas fa-search search-icon"></i>
             </form>
 
-            <!-- Правая часть: иконки + аватар -->
             <div class="header-right">
-                <i class="fas fa-th header-icon"></i>  <!-- Галерея -->
-                <i class="fas fa-question-circle header-icon"></i>  <!-- Помощь -->
-                <i class="fas fa-cog header-icon"></i>  <!-- Настройки -->
-                <img src="/images/avatar.png" class="avatar" alt="Avatar" onclick="toggleProfileModal()" />
+                <i class="fas fa-th header-icon" title="Приложения"></i>
+                <i class="fas fa-question-circle header-icon" title="Помощь"></i>
+                <i class="fas fa-cog header-icon" title="Настройки"></i>
+                <img src="/images/avatar.png" class="avatar" alt="Аватар" onclick="toggleProfileModal()" />
             </div>
         </div>
     </header>
 
-    <!-- Меню слева (как Google Workspace) -->
     <div class="sidebar" id="sidebar">
-        <button class="close-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        <button class="close-btn" aria-label="Закрыть меню" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
         <ul>
-            <li><i class="fas fa-poll"></i> Формы</li>
-            <li><i class="fas fa-file-alt"></i> Документы</li>
-            <li><i class="fas fa-table"></i> Таблицы</li>
-            <li><i class="fas fa-file-powerpoint"></i> Презентации</li>
-            <li><i class="fas fa-cloud"></i> Диск</li>
-            <li><i class="fas fa-cog"></i> Настройки</li>
-            <li><i class="fas fa-question-circle"></i> Справка/отзывы</li>
+            <li><a asp-controller="Poll" asp-action="Index"><i class="fas fa-poll green-icon"></i> **Формы**</a></li>
+            <li><a href="#"><i class="fas fa-file-alt"></i> Документы</a></li>
+            <li><a href="#"><i class="fas fa-table"></i> Таблицы</a></li>
+            <li><a href="#"><i class="fas fa-file-powerpoint"></i> Презентации</a></li>
+        </ul>
+        <div class="sidebar-separator"></div>
+        <h4>Недавние формы</h4>
+        <ul class="recent-forms-list">
+            <li><a href="#">Название_Формы_1</a></li>
+            <li><a href="#">Заявка на отпуск</a></li>
+            <li><a href="#">Опрос по проекту А</a></li>
         </ul>
     </div>
 
-    <!-- Всплывающее меню профиля (белая карточка, тень, скругления 12px) -->
     <div class="profile-modal" id="profileModal">
-        <div class="profile-content">
-            <img src="/images/avatar-large.png" class="profile-avatar" alt="Avatar">
-            <h3>Имя Пользователя</h3>
-            <p>email@example.com</p>
-            <button class="profile-btn">Выйти</button>
-        </div>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            var user = await UserManager.GetUserAsync(User);
+            <div class="profile-content">
+                <img src="/images/avatar-large.png" class="profile-avatar" alt="Avatar">
+                <h3>@(user?.UserName ?? "Пользователь")</h3>
+                <p>@(user?.Email ?? "Email не указан")</p>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="profile-btn signout-btn">Выйти</button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="profile-content">
+                <img src="/images/avatar-default.png" class="profile-avatar" alt="Default Avatar">
+                <p>Вы не авторизованы.</p>
+                <a asp-controller="Account" asp-action="Login" class="profile-btn login-btn">Авторизоваться</a>
+                <a asp-controller="Account" asp-action="Register" class="profile-btn register-btn">Зарегистрироваться</a>
+            </div>
+        }
     </div>
 
     <main class="main-content">

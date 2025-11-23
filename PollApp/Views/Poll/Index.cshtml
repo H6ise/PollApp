@@ -1,60 +1,78 @@
-﻿@* Views/Poll/Index.cshtml (стартовая: карточки с шапкой/картинкой, loader, шаблоны, поиск по названиям, кнопка вида отображения) *@
-@model List<PollApp.Models.Poll>
+﻿@model List<PollApp.Models.Poll>
 
 @{
     ViewData["Title"] = "Формы";
-    var templates = new List<(string Title, string Description)> { ("Пустая форма", "Начните с нуля"), ("Анкета", "Соберите данные") };
-      <!-- Шаблоны -->
+    var templates = new List<(string Title, string Description, string Url)>
+    {
+        ("Пустая форма", "Начните с нуля", "/Admin/Create"),
+        ("Анкета", "Соберите данные", "/Admin/Create?template=Survey"),
+        ("Опрос", "Быстрый опрос мнения", "/Admin/Create?template=Poll")
+    };
 }
 
-<div class="main-content">
-    <h2>Создать форму</h2>
-    <div class="card-grid" id="templateGrid">
-        @foreach (var template in templates)
-        {
-            <div class="card loader-fade">
-                <div class="card-header">@template.Title</div>
-                <img src="/images/template-preview.png" alt="Preview" class="card-img">
-                <div class="card-body">@template.Description</div>
-            </div>
-        }
+<div class="page-content-wrapper">
+    <div class="creation-block">
+        <h2>Создать форму</h2>
+        <div class="card-grid template-grid">
+            @foreach (var template in templates)
+            {
+                <a href="@template.Url" class="poll-card-link">
+                    <div class="card template-card loader-fade">
+                        <div class="card-header">@template.Title</div>
+                        <img src="/images/template-preview.png" alt="Превью" class="card-img">
+                        <div class="card-body">@template.Description</div>
+                    </div>
+                </a>
+            }
+        </div>
     </div>
 
-    <h2>Недавние формы</h2>
-    <button onclick="toggleView()" class="view-toggle">Переключить вид (grid/list)</button>
-    <div class="card-grid" id="pollGrid">
-        @foreach (var poll in Model)
-        {
-            <a asp-action="Details" asp-route-id="@poll.Id" class="text-decoration-none">
-                <div class="card loader-fade">
-                    <div class="card-header">@poll.Title</div>
-                    <img src="@poll.HeaderImageUrl" alt="Header" class="card-img">  <!-- Шапка картинка -->
-                    <div class="card-body">@poll.Description</div>
-                    <div class="card-footer">@poll.StartDate.ToShortDateString() - @(poll.IsActive ? "Активен" : "Завершён")</div>
-                </div>
-            </a>
-        }
+    <div class="recent-forms-block">
+        <div class="recent-forms-header">
+            <h2>Недавние формы</h2>
+            <button onclick="toggleView()" class="view-toggle green-btn">
+                <i class="fas fa-list-ul"></i> / <i class="fas fa-th-large"></i> Переключить вид
+            </button>
+        </div>
+
+        <div class="card-grid poll-grid" id="pollGrid">
+            @foreach (var poll in Model)
+            {
+                <a asp-action="Details" asp-route-id="@poll.Id" class="poll-card-link">
+                    <div class="card poll-card loader-fade">
+                        <div class="card-header">@poll.Title</div>
+                        <img src="@poll.HeaderImageUrl" onerror="this.src='/images/default-header.png'" alt="Шапка" class="card-img">
+                        <div class="card-body">@poll.Description</div>
+                        <div class="card-footer">@poll.StartDate.ToShortDateString() - @(poll.IsActive ? "Активен" : "Завершён")</div>
+                    </div>
+                </a>
+            }
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
+        // Функция поиска (использует поле поиска в шапке)
         function searchPolls(value) {
-            const cards = document.querySelectorAll('#pollGrid .card');
-            cards.forEach(card => {
-                card.style.display = card.textContent.toLowerCase().includes(value.toLowerCase()) ? 'block' : 'none';
+            const cards = document.querySelectorAll('.poll-card-link');
+            cards.forEach(cardLink => {
+                const card = cardLink.querySelector('.card');
+                const isMatch = card.textContent.toLowerCase().includes(value.toLowerCase());
+                cardLink.style.display = isMatch ? 'block' : 'none';
             });
         }
 
+        // Переключение вида (сетка/список)
         function toggleView() {
             document.getElementById('pollGrid').classList.toggle('list-view');
         }
 
-        // Loader: gradual fade-in
+        // Loader: плавное появление
         window.onload = function () {
             const items = document.querySelectorAll('.loader-fade');
             items.forEach((item, index) => {
-                setTimeout(() => item.style.opacity = 1, index * 200);
+                setTimeout(() => item.style.opacity = 1, index * 100);
             });
         };
     </script>

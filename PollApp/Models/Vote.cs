@@ -1,22 +1,18 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace PollApp.Models
 {
     public class Vote
     {
         public int Id { get; set; }
+        public int OptionId { get; set; }
+        public Option Option { get; set; } // Навигационное свойство
 
-        [Required]
         public string UserId { get; set; }
 
-        public virtual AppUser User { get; set; }
+        // 🆕 ДОБАВЛЕНО: Навигационное свойство к пользователю
+        public AppUser User { get; set; }
 
-        [Required]
-        public int OptionId { get; set; }
-
-        public virtual Option Option { get; set; }
-
-        public DateTime VotedAt { get; set; } = DateTime.UtcNow;
+        public DateTime VoteDate { get; set; } = DateTime.UtcNow;
     }
 }

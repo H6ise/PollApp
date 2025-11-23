@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;  // Добавлено
 using Microsoft.AspNetCore.Mvc;
 using PollApp.Models;
-using PollApp.Models.Account;
 using PollApp.ViewModels;
 
 namespace PollApp.Controllers

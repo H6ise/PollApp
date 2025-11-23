@@ -69,5 +69,52 @@ namespace PollApp.Controllers
             ViewBag.PollId = id;
             return View(viewModel);
         }
+        [Authorize]
+        public async Task<IActionResult> CreateEdit(int? id)
+        {
+            Poll poll;
+            if (id.HasValue)
+            {
+                // Редактирование существующего
+                poll = await _pollService.GetPollByIdAsync(id.Value);
+                // Проверяем, что текущий пользователь является создателем опроса
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (poll == null || poll.CreatorUserId != userId)
+                {
+                    return Forbid(); // Запрещаем редактирование чужих опросов
+                }
+            }
+            else
+            {
+                // Создание нового
+                poll = new Poll { Title = "Новая форма", Description = "Описание", Options = new List<Option>() };
+                // Добавляем минимальный вариант ответа
+                poll.Options.Add(new Option { Text = "Вариант 1" });
+            }
+            // Используем простую ViewModel, если она нужна, или саму модель
+            return View(poll);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Save(Poll model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    await _pollService.SavePollAsync(model, userId);
+                    return RedirectToAction("Details", new { id = model.Id });
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError(string.Empty, "Ошибка сохранения: " + ex.Message);
+                }
+            }
+            // Если ошибка, возвращаем пользователя обратно в конструктор
+            return View("CreateEdit", model);
+        }
     }
 }

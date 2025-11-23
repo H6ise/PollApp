@@ -1,0 +1,93 @@
+﻿@model PollApp.Models.Poll
+
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Новая форма" : "Редактирование формы";
+}
+
+<div class="form-builder-page">
+    <div class="form-builder-header">
+        <div class="form-title-bar">
+            <i class="fas fa-poll form-icon"></i>
+            <input type="text" class="form-name-input" value="@Model.Title" placeholder="Новая форма" />
+            <div class="header-menu-icons">
+                <i class="fas fa-eye" title="Предпросмотр"></i>
+                <i class="fas fa-undo" title="Отменить"></i>
+                <i class="fas fa-redo" title="Повторить"></i>
+                <i class="fas fa-link" title="Получить ссылку"></i>
+                <i class="fas fa-user-plus" title="Поделиться"></i>
+            </div>
+            <button class="publish-btn">Опубликовать</button>
+            <img src="/images/avatar.png" class="header-avatar" alt="Avatar" />
+        </div>
+
+        <div class="form-tabs-nav">
+            <a href="#" class="form-tab active">Вопросы</a>
+            <a href="#" class="form-tab">Ответы</a>
+            <a href="#" class="form-tab">Настройки</a>
+        </div>
+    </div>
+
+    <div class="form-builder-main-area">
+        <div class="form-info-card">
+            <input type="text" class="form-main-title" value="@Model.Title" placeholder="Новая форма" />
+            <textarea class="form-description-area" placeholder="Описание">@Model.Description</textarea>
+        </div>
+
+        <div class="form-content-wrapper">
+            <div class="questions-list">
+                <div class="question-card active-question">
+                    <div class="question-header-row">
+                        <input type="text" class="question-title-input" placeholder="Вопрос без заголовка" />
+                        <i class="fas fa-image question-image-icon" title="Добавить изображение"></i>
+
+                        <select class="question-type-select">
+                            <option>Один из списка</option>
+                            <option>Несколько из списка</option>
+                            <option>Текст (строка)</option>
+                            <option>Текст (абзац)</option>
+                        </select>
+                    </div>
+
+                    <div class="question-options">
+                        <div class="option-row">
+                            <input type="radio" disabled />
+                            <input type="text" value="Вариант 1" class="option-input" />
+                            <i class="fas fa-times delete-option-icon"></i>
+                        </div>
+                        <div class="option-row add-option">
+                            <input type="radio" disabled />
+                            <span class="add-option-text">Добавить вариант</span>
+                            <span class="or-text">или</span>
+                            <a href="#" class="add-other-option">добавить вариант "Другое"</a>
+                        </div>
+                    </div>
+
+                    <div class="question-footer-row">
+                        <div class="actions-left">
+                            <i class="fas fa-copy" title="Дублировать"></i>
+                            <i class="fas fa-trash" title="Удалить"></i>
+                        </div>
+                        <div class="actions-right">
+                            <span>Обязательный вопрос</span>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <i class="fas fa-ellipsis-v options-menu" title="Дополнительно"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="floating-toolbar">
+                <i class="fas fa-plus" title="Добавить вопрос"></i>
+                <i class="fas fa-file-signature" title="Импортировать вопросы"></i>
+                <i class="fas fa-font" title="Добавить текст"></i>
+                <i class="fas fa-image" title="Добавить изображение"></i>
+                <i class="fas fa-video" title="Добавить видео"></i>
+                <i class="fas fa-equals" title="Добавить раздел"></i>
+            </div>
+        </div>
+    </div>
+</div>
