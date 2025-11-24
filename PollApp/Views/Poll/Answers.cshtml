@@ -1,0 +1,37 @@
+@* @page
+@model PollApp.Models.AnswersModel
+@{
+    ViewData["Title"] = "Answers";
+}
+
+<h1>Answers</h1>
+
+<div class="answers-container">
+    <div class="answers-header">
+        <h2>0 Answers</h2>
+        <div class="dropdown">
+            <button class="dropdown-toggle">Options</button>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item">Receive notifications for new answers</a>
+                <a href="#" class="dropdown-item">Choose where answers are saved</a>
+                <a href="#" class="dropdown-item disabled">Unlink from form</a>
+                <a href="#" class="dropdown-item">Download answers (CSV)</a>
+                <a href="#" class="dropdown-item">Print all answers</a>
+                <a href="#" class="dropdown-item">Delete all answers</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="answers-content">
+        <p>No answers yet. To start receiving answers, publish the form.</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelector('.dropdown-toggle').addEventListener('click', function() {
+            const menu = document.querySelector('.dropdown-menu');
+            menu.classList.toggle('show');
+        });
+    </script>
+} *@
