@@ -19,6 +19,11 @@ namespace PollApp.Models
         // 🆕 ДОБАВЛЕНО: URL изображения для шапки/превью карточки
         public string HeaderImageUrl { get; set; }
 
+        // 🆕 Поля для сортировки/отслеживания
+        public DateTime? LastModified { get; set; }
+        public DateTime? LastViewed { get; set; }
+        public int Order { get; set; }
+
         // Навигационные свойства
         public ICollection<Option> Options { get; set; }
     }

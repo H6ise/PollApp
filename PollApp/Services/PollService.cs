@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 using PollApp.Data;
 using PollApp.Models;
 using PollApp.ViewModels;
+using System.IO;
 
 namespace PollApp.Services
 {
@@ -14,11 +15,15 @@ namespace PollApp.Services
     {
         private readonly AppDbContext _context;
         private readonly IMemoryCache _cache;
+        private readonly string _imagesPath;
 
         public PollService(AppDbContext context, IMemoryCache cache)
         {
             _context = context;
             _cache = cache;
+            // Директория для хранения изображений (wwwroot/images)
+            _imagesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "polls");
+            if (!Directory.Exists(_imagesPath)) Directory.CreateDirectory(_imagesPath);
         }
 
         // *** Метод GetPollByIdAsync ***
@@ -158,30 +163,34 @@ namespace PollApp.Services
         }
 
         // *** Метод GetActivePollsAsync ***
-        public async Task<List<Poll>> GetActivePollsAsync(int page, int pageSize)
+        public async Task<List<Poll>> GetActivePollsAsync(int page, int pageSize, string ownerFilter = null, string sort = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var cacheKey = $"ActivePolls_Page{page}_Size{pageSize}";
-            if (!_cache.TryGetValue(cacheKey, out List<Poll> polls))
-            {
-                polls = await _context.Polls
-                    .Where(p => p.IsActive && (p.EndDate == null || p.EndDate > DateTime.UtcNow))
-                    .Include(p => p.Options)
-                    .OrderByDescending(p => p.StartDate)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+            IQueryable<Poll> query = _context.Polls.Include(p => p.Options);
 
-                var cacheOptions = new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(5)
-                };
-                _cache.Set(cacheKey, polls, cacheOptions);
+            // фильтр по активности
+            query = query.Where(p => p.IsActive && (p.EndDate == null || p.EndDate > DateTime.UtcNow));
+
+            // фильтр по владельцу
+            if (!string.IsNullOrEmpty(ownerFilter) && ownerFilter == "me")
+            {
+                // ownerFilter будет обработан на уровне контроллера где доступен userId
             }
 
-            return polls;
+            // Сортировка
+            query = sort switch
+            {
+                "dateview" => query.OrderByDescending(p => p.LastViewed ?? p.StartDate),
+                "mymod" => query.OrderByDescending(p => p.LastModified ?? p.StartDate),
+                "datechanged" => query.OrderByDescending(p => p.LastModified ?? p.StartDate),
+                "title" => query.OrderBy(p => p.Title),
+                _ => query.OrderByDescending(p => p.StartDate)
+            };
+
+            var result = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return result;
         }
 
         // *** Метод GetResultsAsync ***
@@ -279,6 +288,51 @@ namespace PollApp.Services
             _context.Polls.Remove(poll);
             await _context.SaveChangesAsync();
             _cache.Remove("ActivePolls_*");
+        }
+
+        public async Task<string> SaveHeaderImageAsync(int pollId, byte[] data, string fileName, string userId)
+        {
+            var poll = await _context.Polls.FirstOrDefaultAsync(p => p.Id == pollId);
+            if (poll == null) throw new KeyNotFoundException("Poll not found");
+            if (poll.CreatorUserId != userId) throw new UnauthorizedAccessException("Only owner can change header image");
+
+            var safeName = $"poll_{pollId}_{Guid.NewGuid().ToString("N")}{Path.GetExtension(fileName)}";
+            var fullPath = Path.Combine(_imagesPath, safeName);
+            await File.WriteAllBytesAsync(fullPath, data);
+
+            var url = $"/images/polls/{safeName}";
+            poll.HeaderImageUrl = url;
+            poll.LastModified = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            _cache.Remove("ActivePolls_*");
+            return url;
+        }
+
+        public async Task UpdateOrderAsync(Dictionary<int, int> orderById, string userId)
+        {
+            var ids = orderById.Keys.ToList();
+            var polls = await _context.Polls.Where(p => ids.Contains(p.Id) && p.CreatorUserId == userId).ToListAsync();
+            foreach (var p in polls)
+            {
+                if (orderById.TryGetValue(p.Id, out var ord)) p.Order = ord;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkViewedAsync(int pollId, string userId)
+        {
+            var poll = await _context.Polls.FirstOrDefaultAsync(p => p.Id == pollId);
+            if (poll == null) return;
+            poll.LastViewed = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkModifiedAsync(int pollId, string userId)
+        {
+            var poll = await _context.Polls.FirstOrDefaultAsync(p => p.Id == pollId);
+            if (poll == null) return;
+            poll.LastModified = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
     }
 }

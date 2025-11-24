@@ -62,9 +62,9 @@
         </div>
 
         <div class="card-grid poll-grid" id="pollGrid">
-            @foreach (var poll in Model)
+            @foreach (var poll in Model.OrderBy(p => p.Order))
             {
-                <div class="poll-item" data-id="@poll.Id" data-url="@Url.Action("Details","Poll", new { id = poll.Id })">
+                <div class="poll-item" draggable="true" data-id="@poll.Id" data-url="@Url.Action("Details","Poll", new { id = poll.Id })">
                     <a class="poll-card-link card-link" href="@Url.Action("Details","Poll", new { id = poll.Id })">
                         <div class="card poll-card" data-poll-id="@poll.Id">
                             <div class="card-header" data-header>@poll.Title</div>
@@ -85,8 +85,20 @@
     </div>
 </div>
 
-<!-- Hidden global file input used to upload header image (client-side preview only) -->
+<!-- Hidden global file input used to upload header image (client-side preview + server upload) -->
 <input id="globalFileInput" type="file" accept="image/*" style="display:none" />
+
+<!-- Modal confirmation -->
+<div id="confirmModal" class="confirm-modal" style="display:none">
+    <div class="confirm-modal-content">
+        <h3>Подтвердите действие</h3>
+        <p id="confirmText">Вы уверены?</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+            <button id="confirmCancel" class="custom-btn">Отмена</button>
+            <button id="confirmOk" class="custom-btn primary-btn">Удалить</button>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
@@ -113,7 +125,29 @@
             document.getElementById('toggleListBtn').addEventListener('click', () => document.getElementById('pollGrid').classList.add('list-view'));
             document.getElementById('toggleGridBtn').addEventListener('click', () => document.getElementById('pollGrid').classList.remove('list-view'));
 
+            // Drag and drop ordering
+            let dragSrc = null;
+            const grid = document.getElementById('pollGrid');
+            grid.addEventListener('dragstart', function (e) {
+                dragSrc = e.target.closest('.poll-item');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragSrc.dataset.id);
+                dragSrc.classList.add('dragging');
+            });
+            grid.addEventListener('dragover', function (e) { e.preventDefault(); const over = e.target.closest('.poll-item'); if (!over || over === dragSrc) return; const rect = over.getBoundingClientRect(); const next = (e.clientY - rect.top) / rect.height > 0.5; if (next) over.after(dragSrc); else over.before(dragSrc); });
+            grid.addEventListener('dragend', async function (e) {
+                if (!dragSrc) return; dragSrc.classList.remove('dragging');
+                // build order map
+                const items = Array.from(document.querySelectorAll('.poll-item'));
+                const orderById = {};
+                items.forEach((it, idx) => orderById[it.dataset.id] = idx);
+                try {
+                    await fetch('/Poll/UpdateOrder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderById), credentials: 'same-origin' });
+                } catch (err) { console.error(err); }
+            });
+
             // Card actions
+            let pendingDeleteItem = null;
             document.getElementById('pollGrid').addEventListener('click', async function (e) {
                 const item = e.target.closest('.poll-item');
                 if (!item) return;
@@ -131,40 +165,54 @@
                 }
 
                 if (e.target.closest('.delete-poll')) {
-                    if (!confirm('Удалить опрос?')) return;
-                    try {
-                        const res = await fetch('/Poll/Delete/' + pollId, { method: 'POST', credentials: 'same-origin' });
-                        if (res.ok) {
-                            item.remove();
-                        } else {
-                            const txt = await res.text(); alert('Ошибка: ' + txt);
-                        }
-                    } catch (err) { alert(err); }
+                    // show custom modal
+                    pendingDeleteItem = item;
+                    document.getElementById('confirmText').textContent = 'Удалить опрос? Это действие нельзя отменить.';
+                    document.getElementById('confirmModal').style.display = 'flex';
                     return;
                 }
 
                 if (e.target.closest('.upload-image')) {
                     const fileInput = document.getElementById('globalFileInput');
                     fileInput._targetItem = item;
+                    fileInput._pollId = pollId;
                     fileInput.click();
                     return;
                 }
             });
 
-            // Global file input change -> preview image in card (client-side)
-            document.getElementById('globalFileInput').addEventListener('change', function (ev) {
+            document.getElementById('confirmCancel').addEventListener('click', function () { document.getElementById('confirmModal').style.display = 'none'; pendingDeleteItem = null; });
+            document.getElementById('confirmOk').addEventListener('click', async function () {
+                if (!pendingDeleteItem) return; const pollId = pendingDeleteItem.dataset.id;
+                try {
+                    const res = await fetch('/Poll/Delete/' + pollId, { method: 'POST', credentials: 'same-origin' });
+                    if (res.ok) { pendingDeleteItem.remove(); }
+                    else { const txt = await res.text(); alert('Ошибка: ' + txt); }
+                } catch (err) { alert(err); }
+                document.getElementById('confirmModal').style.display = 'none'; pendingDeleteItem = null;
+            });
+
+            // Global file input change -> upload to server and update card image
+            document.getElementById('globalFileInput').addEventListener('change', async function (ev) {
                 const file = this.files[0];
                 if (!file) return;
+                const item = this._targetItem; const pollId = this._pollId;
+                // preview
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    const item = ev.target._targetItem;
-                    if (!item) return;
-                    const img = item.querySelector('[data-img]');
-                    img.src = e.target.result;
-                };
+                reader.onload = function (e) { if (item) { const img = item.querySelector('[data-img]'); img.src = e.target.result; } };
                 reader.readAsDataURL(file);
+
+                // upload to server
+                try {
+                    const fd = new FormData(); fd.append('file', file);
+                    const res = await fetch('/Poll/UploadHeaderImage/' + pollId, { method: 'POST', body: fd, credentials: 'same-origin' });
+                    if (res.ok) {
+                        const json = await res.json(); if (json.url && item) item.querySelector('[data-img]').src = json.url;
+                    } else { const txt = await res.text(); alert('Ошибка загрузки: ' + txt); }
+                } catch (err) { console.error(err); }
+
                 // reset
-                this.value = null;
+                this.value = null; this._targetItem = null; this._pollId = null;
             });
 
             function startRename(item, pollId) {

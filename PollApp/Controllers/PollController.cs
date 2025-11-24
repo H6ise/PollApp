@@ -22,23 +22,23 @@ namespace PollApp.Controllers
             _voteService = voteService;
         }
 
-        public async Task<IActionResult> Index(int page = 1, string sort = "dateview")
+        public async Task<IActionResult> Index(int page = 1, string sort = "dateview", string owner = "me")
         {
-            // Поддержка сортировки (пока реализована минимально на уровне сервиса/запроса)
-            var polls = await _pollService.GetActivePollsAsync(page, 50);
+            string currentUserId = null;
+            if (User.Identity.IsAuthenticated)
+                currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Демонстрационная сортировка на стороне сервера для нескольких опций
-            polls = sort switch
+            var polls = await _pollService.GetActivePollsAsync(page, 50, owner, sort);
+
+            // Если указан owner=me, фильтруем на сервере
+            if (owner == "me" && currentUserId != null)
             {
-                "dateview" => polls.OrderByDescending(p => p.StartDate).ToList(),
-                "mymod" => polls.OrderByDescending(p => p.StartDate).ToList(), // TODO: заменить реальной логикой
-                "datechanged" => polls.OrderByDescending(p => p.StartDate).ToList(),
-                "title" => polls.OrderBy(p => p.Title).ToList(),
-                _ => polls
-            };
+                polls = polls.Where(p => p.CreatorUserId == currentUserId).ToList();
+            }
 
             ViewBag.Page = page;
             ViewBag.Sort = sort;
+            ViewBag.Owner = owner;
             ViewBag.HasNext = polls.Count == 50;
             return View(polls);
         }
@@ -161,6 +161,40 @@ namespace PollApp.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> UploadHeaderImage(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var file = Request.Form.Files.FirstOrDefault();
+            if (file == null) return BadRequest("No file");
+            using var ms = new System.IO.MemoryStream();
+            await file.CopyToAsync(ms);
+            var data = ms.ToArray();
+            try
+            {
+                var url = await _pollService.SaveHeaderImageAsync(id, data, file.FileName, userId);
+                return Ok(new { url });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrder([FromBody] Dictionary<int,int> orderById)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                await _pollService.UpdateOrderAsync(orderById, userId);
+                return Ok();
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
 }
